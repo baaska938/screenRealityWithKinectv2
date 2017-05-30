@@ -76,6 +76,9 @@ void setup() {
   upX = 0;
   upY = 1;
   upZ = 0;
+  
+  calibration();
+  ortho();
 
   beginCamera();
   camera(eyeX, eyeY, eyeZ, cX, cY, cZ, upX, upY, upZ);
@@ -88,7 +91,7 @@ void draw() {
   ambientLight(150, 150, 150); 
   lightSpecular(255, 255, 255);
   directionalLight(100, 100, 100, 0, 1, -1); //<>// //<>//
-  if (keyPressed == true && !isKinectEnabled) {
+  if (keyPressed == true && isKinectEnabled) {
     switch(key) {
     case 'a':
       eyeX -= 10;
@@ -213,60 +216,36 @@ color getHandJestureColor(HState hs) {
 
 float pixelToCm(int size) {
   return (float) size/PIXEL_NBR_PER_CM;
-} //<>// //<>// //<>//
-void pillar(float length, float radius1, float radius2) {
-  float x, y, z;
-  pushMatrix();
-  //upper base
-  beginShape(TRIANGLE_FAN);
-  y = -length / 2;
-  vertex(0, y, 0);
-  for (int deg = 0; deg <= 360; deg = deg + 10) { //<>//
-    x = cos(radians(deg)) * radius1;
-    z = sin(radians(deg)) * radius1;
-    vertex(x, y, z);
-  }
-  endShape();
-  //base
-  beginShape(TRIANGLE_FAN);
-  y = length / 2;
-  vertex(0, y, 0);
-  for (int deg = 0; deg <= 360; deg = deg + 10) {
-    x = cos(radians(deg)) * radius2;
-    z = sin(radians(deg)) * radius2;
-    vertex(x, y, z);
-  }
-  endShape();
-  //side
-  beginShape(TRIANGLE_STRIP); //<>//
-  for (int deg =0; deg <= 360; deg = deg + 5) {
-    x = cos(radians(deg)) * radius1;
-    y = -length / 2;
-    z = sin(radians(deg)) * radius1;
-    vertex(x, y, z);
-    x = cos(radians(deg)) * radius2;
-    y = length / 2;
-    z = sin(radians(deg)) * radius2;
-    vertex(x, y, z);
-  }
-  endShape();
-  popMatrix();
 }
+
+int mainBoxH = 20; //mainBox measured height in cm
+int toScreen = 100; //length between kenect and screen
+int smallBoxWidth;
+
+void calibration(){
+  smallBoxWidth = 100/2 * cmToPixel(toScreen) / (80 + cmToPixel(toScreen)) *2;
+}
+
+int cmToPixel(int size){
+  return size * 100 / mainBoxH; //100 is mainBoxY
+}
+
 void object() {
   //MainBox
-  int mainBoxX = 100;  //MainBox width
-  int mainBoxY = 100;  //MainBox height
+  int mainBoxY = 100;  //MainBox height //FOR CALIB
+  int mainBoxX = mainBoxY; //MainBox width
   int mainBoxZ = 80;   //MainBox depth
   int sphereRad = 4;   //radius of the sphere
   int thickness = 20;   //thickness of the keihin
   int breadth = 10;    //width of the keihin
   int num = 6;
+  
   int keihinXZ[] = {-40, -20, //point(x,z) of the keihin
     0, -20, 
     40, -20, 
     -40, 20, 
     0, 20, 
-    40, 20};  
+    40, 20}; 
   //for mainBox movement
   if (movement) {//Down operation
     //downward
@@ -319,17 +298,22 @@ void object() {
       break;
     }
   }
+  
   pushMatrix();
   translate(width/2, height/2, 0);
-  scale(5);
+  scale(4);
   noFill();
   stroke(255);
-  box(mainBoxX, mainBoxY, mainBoxZ); //<>// //<>//
+  rectMode(CENTER);
+  rect(0,0,mainBoxX, mainBoxY);
+  
+  translate(0,0,-mainBoxZ);
+  rect(0,0,smallBoxWidth, smallBoxWidth);
   for (int i = 0; i<num; i++) {
     pushMatrix();
     translate(keihinXZ[i*2], mainBoxY/2 - thickness / 2, keihinXZ[i*2+1]); //<>//
     fill(boxCollisionStatusCols[i]);
-    box(breadth, thickness, breadth);
+    //box(breadth, thickness, breadth);
     popMatrix();
   }
 
